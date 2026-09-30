@@ -27,6 +27,6 @@ logs/.cloud-workload.lock
 
 results/demo/
 
-# Course-material snapshots are kept outside the public working tree.
+# Imported source snapshots are kept outside the public working tree.
 /docs/sources/project-brief.*
 /docs/sources/project-evaluation.*

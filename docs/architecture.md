@@ -169,8 +169,8 @@ src/llm_eval/
 | `configs/evaluation.json` | 생성 시작 후 확정된 평가 정책·모델 4개·20회 분모·12/20 로컬 통과선·네 scoring 문제의 유효 제한 |
 | `data/coci/testdata-manifest.json` | 공식 데이터 URL·ZIP 해시·선택 문항 정보; `data setup`이 사용 |
 | `data/coci/problems.json` | 선정 문제 metadata·문제문/테스트 경로·시간/메모리 제한; 생성·채점·검증이 읽는다 |
-| `.agents/skills/kant-notion-journal/SKILL.md` | 명시적으로 요청한 Notion 활동 일지 작성 절차 |
-| `.agents/skills/kant-notion-journal/agents/openai.yaml` | 저장소 스킬 표시 정보와 암묵적 호출 금지 설정 |
+| `.agents/skills/project-notion-journal/SKILL.md` | 명시적으로 요청한 Notion 활동 일지 작성 절차 |
+| `.agents/skills/project-notion-journal/agents/openai.yaml` | 저장소 스킬 표시 정보와 암묵적 호출 금지 설정 |
 | `.gitignore` | 비밀 파일·환경·캐시·운영 로그 등의 추적 제외 규칙 |
 
 `.env`·모델 가중치·테스트 데이터·로그·생성 결과는 실행 입력 또는 산출물이다. 이 문서에서는 개별 내용을 나열하지 않으며 비밀값을 코드·문서·결과에 복사하지 않는다.
@@ -188,20 +188,20 @@ src/llm_eval/
 | `docs/operations/environment.md` | 장비·버전·서버 설정의 관측 시점과 근거 |
 | `docs/operations/recording.md` | 지표 의미·누락값·응답 저장·채점의 한계 |
 | `docs/operations/evaluation.md` | 기준 세션·제한 재평가·보조 수정·설명 리뷰·보고서 절차 |
-| `docs/project/assignment.md` | 교육 과정의 과제 맥락과 이번 수행 범위 요약 |
-| `docs/project/assignment-rubric.md` | 프로젝트 평가 근거를 찾는 문서 안내 |
-| `docs/project/learning-guide.md` | 실제 수행 흐름·조건 차이·현재 실행 안내 |
+| `docs/project/experiment-scope.md` | 비교 실험의 목적·규모·평가 범위 |
+| `docs/project/evidence-guide.md` | 프로젝트 평가 근거를 찾는 문서 안내 |
+| `docs/project/experiment-guide.md` | 실제 수행 흐름·조건 차이·현재 실행 안내 |
 | `docs/project/model-candidates.md` | 모델 후보 조사와 제외 근거 |
 | `docs/project/requirements.md` | 사용자 정의 입력·반복·채점·선정 기준 |
-| `docs/project/evaluation-questions.md` | 질문 10개의 기대 결과·사례 구분·동일 조건과 차이 (발제 산출물) |
-| `docs/project/local-cloud-comparison.md` | Local–Cloud 실측과 운영 조건 분석 (발제 산출물) |
-| `docs/project/model-selection-report.md` | 최종 선정 결과·근거·한계 (발제 산출물) |
+| `docs/project/evaluation-questions.md` | 질문 10개의 기대 결과·사례 구분·동일 조건과 차이 |
+| `docs/project/local-cloud-comparison.md` | Local–Cloud 실측과 운영 조건 분석 |
+| `docs/project/model-selection-report.md` | 최종 선정 결과·근거·한계 |
 | `docs/history/generation-diagnostics.md` | reasoning 반복·회차 중복·후보 코드 결함 진단 |
 | `docs/history/maintenance-log.md` | 유지보수 완료 근거·미확인 사항·종료 시점 상태; 종료로 닫힘 (이전 `docs/maintenance-handoff.md`) |
 | `docs/history/README.md` | 과거 경로와 Git 복원 안내 |
 | `docs/history/hyperclovax-runbook.md` | 과거 HyperCLOVA 실행·진단 절차 |
 | `docs/history/reasoning-budget-diagnostic.md` | 과거 reasoning 설정과 진단 근거 |
-| `docs/sources/README.md` | 자료 출처와 교육 자료의 공개 범위 |
+| `docs/sources/README.md` | 공개 기술·데이터 출처와 이용 범위 |
 | `results/README.md` | 결과 파일군·집계 제외·채점 세션 해석 |
 
 테스트는 소스의 역할에 맞춰 나눈다. 모의 응답·임시 파일을 사용하며 합성 프로세스 검증은 별도 환경 변수로 활성화한다. 실제 모델·API를 호출하지 않는다.

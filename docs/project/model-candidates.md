@@ -1,6 +1,6 @@
 # 로컬 모델 후보 조사
 
-[과제 범위](assignment.md)에 맞춰 후보 조사 내용을 기록한다. 발제의 후보 조사 항목을 아래 비교표에 함께 기록한다. 미조사 값은 그대로 두고 설치 식별값은 설치 정보 확인 후 작성한다.
+[실험 범위](experiment-scope.md)에 맞춰 후보 조사 내용을 기록한다. 후보의 특성과 실행 조건을 아래 비교표에 함께 기록한다. 미조사 값은 그대로 두고 설치 식별값은 설치 정보 확인 후 작성한다.
 
 ## 핵심 비교표
 
@@ -75,7 +75,7 @@ PARAMETER num_ctx 4096
 
 ### 제외 전 실행 도구 예외와 점검 이력
 
-HyperCLOVA만 NAVER `llama.cpp` 포크로 진행하기로 했다. 이는 [사용자 선택 실행 도구 예외](learning-guide.md#현재-후보와-hyperclova-제외-이력)이며 과제 측의 승인 여부는 확인되지 않았다. 위 조사값은 보존하며 다운로드 식별자와 실제 실행 도구를 구분한다.
+HyperCLOVA만 NAVER `llama.cpp` 포크로 진행하기로 했다. 실행 도구 선택과 이후 제외 경과는 [진행 안내](experiment-guide.md#현재-후보와-hyperclova-제외-이력)에 구분했다. 위 조사값은 보존하며 다운로드 식별자와 실제 실행 도구를 구분한다.
 
 - 다운로드한 전체 Ollama 태그: `hf.co/naver-ellm/HyperCLOVAX-SEED-Think-14B-GGUF:Q4_K_M`. 교체 전 표의 `ee0e0d9ce93e`는 Ollama 등록 ID이며 실행 도구 버전이 아니다.
 - 실행 도구: [NAVER 포크](https://github.com/NAVER-Cloud-HyperCLOVA-X/llama.cpp), 조회한 커밋 `e586ccd5`. [GGUF 모델 카드](https://huggingface.co/naver-ellm/HyperCLOVAX-SEED-Think-14B-GGUF) 본문에도 이 포크 사용을 안내한다.
