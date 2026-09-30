@@ -17,6 +17,13 @@ def parse_args(argv=None):
         "--output", type=Path,
         help="새 출력 디렉터리; 생략하면 results/demo/offline 아래 새 실행 생성",
     )
+    data = commands.add_parser("data", help="공식 COCI 테스트 데이터 준비")
+    data_actions = data.add_subparsers(dest="data_action", required=True)
+    setup = data_actions.add_parser("setup", help="고정 SHA-256의 공식 테스트 데이터 설치")
+    setup.add_argument(
+        "--archives-dir", type=Path,
+        help="공식 contest4/5/6_testdata.zip이 있는 폴더; 생략하면 HTTPS 다운로드",
+    )
     generate = commands.add_parser("generate", help="선택한 문제의 응답과 후보 저장")
     providers = generate.add_subparsers(dest="provider", required=True)
     local = providers.add_parser("local", help="실행 중인 로컬 서버에 요청")
@@ -86,6 +93,10 @@ def project_root():
 
 
 def dispatch(root, args):
+    if args.command == "data":
+        from llm_eval.data_setup import setup_dataset
+
+        return setup_dataset(root, args.archives_dir)
     if args.command == "demo":
         from llm_eval.offline_demo import run_offline_demo
 

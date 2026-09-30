@@ -10,7 +10,7 @@ from llm_eval import cli
 
 class CommandTests(unittest.TestCase):
     def test_help_never_resolves_checkout_or_dispatches(self):
-        commands = [[], ['demo'], ['demo', 'offline'], ['generate'], ['generate', 'local'], ['generate', 'cloud'],
+        commands = [[], ['demo'], ['demo', 'offline'], ['data'], ['data', 'setup'], ['generate'], ['generate', 'local'], ['generate', 'cloud'],
                     ['queue'], ['warmup'], ['judge'], ['judge', 'batch'],
                     ['judge', 'candidate'], ['validate'], ['diagnose'],
                     ['diagnose', 'response'], ['diagnose', 'generation-limit'],
@@ -85,6 +85,9 @@ class CommandTests(unittest.TestCase):
 
     def test_dispatch_preserves_selection_and_round(self):
         cases = [
+            (['data', 'setup'], 'llm_eval.data_setup.setup_dataset', (None,)),
+            (['data', 'setup', '--archives-dir', '/tmp/archives'],
+             'llm_eval.data_setup.setup_dataset', (Path('/tmp/archives'),)),
             (['demo', 'offline', '--output', '/tmp/demo-fixture'],
              'llm_eval.offline_demo.run_offline_demo', (Path('/tmp/demo-fixture'),)),
             (['demo', 'offline'],

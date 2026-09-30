@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "season": "2025_2026",
+  "verified_on": "2026-09-30",
+  "source_url": "https://hsin.hr/coci/",
+  "archives": [
+    {
+      "contest": 4,
+      "filename": "contest4_testdata.zip",
+      "url": "https://hsin.hr/coci/contest4_testdata.zip",
+      "sha256": "8bdd65bb34ec91c3789b0adb9dc2cf145dcf57a6c04b30abe4b148c3f3e6ca9e",
+      "size_bytes": 166728766,
+      "problem_roots": [
+        "magija",
+        "sladoled",
+        "tjelesni",
+        "tomahawk",
+        "zombie"
+      ],
+      "selected_problems": {
+        "tomahawk": {
+          "cases": 130,
+          "samples": 2
+        }
+      }
+    },
+    {
+      "contest": 5,
+      "filename": "contest5_testdata.zip",
+      "url": "https://hsin.hr/coci/contest5_testdata.zip",
+      "sha256": "a293ec28676899aeba18a14c0ae381825601aec59e0084cceba65a1a0460f5bf",
+      "size_bytes": 31373835,
+      "problem_roots": [
+        "pet",
+        "skare",
+        "slaganje",
+        "struktura",
+        "tezina"
+      ],
+      "selected_problems": {
+        "skare": {
+          "cases": 41,
+          "samples": 3
+        },
+        "struktura": {
+          "cases": 130,
+          "samples": 3
+        },
+        "tezina": {
+          "cases": 78,
+          "samples": 3
+        },
+        "pet": {
+          "cases": 104,
+          "samples": 3
+        }
+      }
+    },
+    {
+      "contest": 6,
+      "filename": "contest6_testdata.zip",
+      "url": "https://hsin.hr/coci/contest6_testdata.zip",
+      "sha256": "c354657d2c49e495f4f6051d208e76de7120e6684ae93de935bcef811f877f2a",
+      "size_bytes": 120834256,
+      "problem_roots": [
+        "cokolada",
+        "dzeparac",
+        "prepisivanje",
+        "skijanje",
+        "ucionica"
+      ],
+      "selected_problems": {
+        "cokolada": {
+          "cases": 75,
+          "samples": 3
+        },
+        "dzeparac": {
+          "cases": 104,
+          "samples": 3
+        },
+        "prepisivanje": {
+          "cases": 130,
+          "samples": 2
+        },
+        "ucionica": {
+          "cases": 91,
+          "samples": 3
+        },
+        "skijanje": {
+          "cases": 104,
+          "samples": 2
+        }
+      }
+    }
+  ]
+}

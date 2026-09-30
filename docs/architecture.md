@@ -7,6 +7,8 @@
 모든 명령은 저장소 루트에서 실행한다. 표준 인터페이스는 설치된 console script `llm-eval` 하나다.
 
 ```text
+uv run llm-eval demo offline       [--output <new-directory>]
+uv run llm-eval data setup          [--archives-dir <directory>]
 uv run llm-eval generate local    --model <qwen36|gemma4> --problems <ids|all> [--round <1|2>]
 uv run llm-eval generate cloud    --model <luna|motif3> --problems <ids|all> [--round <1|2>]
 uv run llm-eval queue              [--startup-timeout-seconds <seconds>]
@@ -43,7 +45,7 @@ Cloud `--model`의 값은 결과 경로의 모델 폴더 이름이자 `judge bat
 | `uv run python scripts/run_benchmark.py ...` | 위 local 명령 | legacy local alias |
 | `uv run python scripts/run_judge.py ...` | 위 batch 명령 | legacy judge alias |
 
-`llm-eval`는 `shared/workloads.py`가 프로세스 목록에서 하위 명령을 읽을 수 있어야 한다. `generate local`, `warmup`, `queue`는 로컬 잠금, `generate cloud`는 Cloud 잠금, `judge`와 `evaluate run`은 두 잠금를 사용한다. `evaluate prepare`와 `evaluate report`는 모델·후보를 실행하지 않는다. 진단 중 로컬 서버를 부르는 명령도 로컬 작업으로 감지한다. `validate`는 모델 작업이 아니다. 작업 검사는 이미 실행 중인 이전 script 이름을 보존한 감지 항목이 있지만, 현재 실행 진입점은 root CLI 하나다.
+`llm-eval`는 `shared/workloads.py`가 프로세스 목록에서 하위 명령을 읽을 수 있어야 한다. `generate local`, `warmup`, `queue`는 로컬 잠금, `generate cloud`는 Cloud 잠금, `judge`와 `evaluate run`은 두 잠금를 사용한다. `evaluate prepare`와 `evaluate report`는 모델·후보를 실행하지 않는다. 진단 중 로컬 서버를 부르는 명령도 로컬 작업으로 감지한다. `demo offline`은 고정 합성 예제만 실행하고, `data setup`은 공식 테스트 데이터를 검증·설치한다. `validate`는 데이터 배치 검증만 한다. 세 명령 모두 모델·Cloud API를 호출하지 않는다. 작업 검사는 이미 실행 중인 이전 script 이름을 보존한 감지 항목이 있지만, 현재 실행 진입점은 root CLI 하나다.
 
 ```mermaid
 flowchart TD
@@ -75,6 +77,8 @@ src/llm_eval/
 ├── __init__.py
 ├── __main__.py
 ├── cli.py
+├── data_setup.py
+├── offline_demo.py
 ├── diagnostics.py
 ├── local/
 │   ├── __init__.py
@@ -112,6 +116,8 @@ src/llm_eval/
 | --- | --- | --- | --- |
 | `cli.py` | `parse_args`, `project_root`, `dispatch`, `main`: 인자 해석·저장소 위치 검사·기능 연결 | `__main__.py`, `pyproject.toml`의 console script | `tests/test_cli.py`, `tests/shared/test_commands.py` |
 | `__main__.py` | `python -m llm_eval`을 `cli.main()`으로 연결 | Python 모듈 실행 | `tests/test_cli.py` |
+| `data_setup.py` | 공식 ZIP 다운로드·해시 검사·안전한 선택 설치; 기존 대상 폴더 보존 | `cli.dispatch`의 `data setup` | `tests/test_data_setup.py` |
+| `offline_demo.py` | 고정 합성 응답의 코드 추출·저장·채점·요약 | `cli.dispatch`의 `demo offline` | `tests/test_offline_demo.py` |
 | `diagnostics.py` | `run_response_probe`, `run_generation_limit_probe`: 별도 고정 입력 진단; CLI가 실행 시 import | `cli.dispatch` | `tests/shared/test_commands.py` |
 | `local/client.py` | `create_client`, `generation_config`, `chat`: 로컬 요청과 공통 설정; `request_warmup`, `run_warmup`: 무저장 워밍업 | `cli.dispatch`, `local/generation.py`, `diagnostics.py` | `tests/local/test_generation.py`, `tests/local/test_warmup.py`, `tests/shared/test_conditions.py` |
 | `local/generation.py` | `build_record`, `request_conditions`, `preflight_problem`, `run_problem`, `run_selected`: 재개 검사·생성·원자적 응답 저장 | `cli.dispatch`, `local/queue.py` | `tests/local/test_generation.py`, `tests/shared/test_conditions.py` |
@@ -161,6 +167,7 @@ src/llm_eval/
 | `configs/llama.cpp/qwen36.sh` | Qwen 서버 실행 인자; 수동 실행과 큐가 사용하며 이번 구조 변경에서 보존 |
 | `configs/llama.cpp/gemma4.sh` | Gemma 서버 실행 인자; fit-target 0·load/lazy auto 등 원본 튜닝 보존 |
 | `configs/evaluation.json` | 생성 시작 후 확정된 평가 정책·모델 4개·20회 분모·12/20 로컬 통과선·네 scoring 문제의 유효 제한 |
+| `data/coci/testdata-manifest.json` | 공식 데이터 URL·ZIP 해시·선택 문항 정보; `data setup`이 사용 |
 | `data/coci/problems.json` | 선정 문제 metadata·문제문/테스트 경로·시간/메모리 제한; 생성·채점·검증이 읽는다 |
 | `.agents/skills/kant-notion-journal/SKILL.md` | 명시적으로 요청한 Notion 활동 일지 작성 절차 |
 | `.agents/skills/kant-notion-journal/agents/openai.yaml` | 저장소 스킬 표시 정보와 암묵적 호출 금지 설정 |
@@ -208,6 +215,8 @@ src/llm_eval/
 | 테스트 파일 | 검증 범위와 사용하는 구현 |
 | --- | --- |
 | `tests/test_cli.py` | 명령 인자·기본값·잘못된 위치·분기별 전달 인자 |
+| `tests/test_data_setup.py` | ZIP 무결성·경로·입출력 짝·용량 제한·덮어쓰기 방지와 모의 설치 |
+| `tests/test_offline_demo.py` | 합성 예제 판정·원본 보존·네트워크 미사용·출력 경계 |
 | `tests/cloud/__init__.py` | 테스트 패키지 표시; 독립 실행 기능 없음 |
 | `tests/cloud/helpers.py` | Cloud 테스트용 클라이언트·응답 fixture |
 | `tests/cloud/test_client.py` | 요청 설정·환경 변수의 키 조회·클라이언트 생성 |
