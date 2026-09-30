@@ -10,6 +10,13 @@ def parse_args(argv=None):
         prog="llm-eval", description="LLM 생성·기록·별도 채점"
     )
     commands = parser.add_subparsers(dest="command", required=True)
+    demo = commands.add_parser("demo", help="모델 호출 없는 합성 예제로 실행 흐름 체험")
+    demos = demo.add_subparsers(dest="demo_mode", required=True)
+    offline = demos.add_parser("offline", help="고정 합성 응답의 추출·저장·채점·요약")
+    offline.add_argument(
+        "--output", type=Path,
+        help="새 출력 디렉터리; 생략하면 results/demo/offline 아래 새 실행 생성",
+    )
     generate = commands.add_parser("generate", help="선택한 문제의 응답과 후보 저장")
     providers = generate.add_subparsers(dest="provider", required=True)
     local = providers.add_parser("local", help="실행 중인 로컬 서버에 요청")
@@ -79,6 +86,10 @@ def project_root():
 
 
 def dispatch(root, args):
+    if args.command == "demo":
+        from llm_eval.offline_demo import run_offline_demo
+
+        return run_offline_demo(root, args.output)
     if args.command == "generate":
         if args.provider == "local":
             from llm_eval.local.generation import run_selected

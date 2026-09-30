@@ -1,33 +1,53 @@
-# 로컬 LLM 코딩테스트 평가
+# 로컬·클라우드 LLM 코딩 평가
 
-코딩테스트를 풀 때 쓸 로컬 LLM을 하나 고르기 위한 실험 저장소입니다.
+개인 알고리즘 학습에 사용할 로컬 LLM을 고르기 위해, 공개 코딩 문제에 대한 **생성 코드의 실행 결과와 설명 품질**을 비교한 프로젝트입니다. 로컬 모델을 직접 구동하고 추론·서빙 파라미터를 바꿔 보며, 외부 LLM API와 같은 문제로 비교했습니다.
 
-답변이 그럴듯한지만 보지 않습니다. COCI 공개 문제를 풀게 한 뒤 모델이 생성한 Python 코드를 실제 테스트 데이터로 실행해 AC·WA·TLE·RE·NO_CODE까지 받아 봅니다. 채점을 외부 사이트에 맡기지 않으려고 공식 테스트 데이터가 공개된 대회를 골랐고, 로컬 Judge를 직접 구현했습니다.
+Python 평가 도구는 모델 호출부터 원본 기록, 코드 추출, 로컬 채점, 보고서 생성까지 연결합니다. 설정과 원본 응답, 실패 기록을 함께 남겨 결과가 나온 조건을 다시 확인할 수 있게 했습니다.
 
-비교 대상은 로컬 2개(Qwen3.6, Gemma4)와 Cloud 2개(Luna, Motif-3)입니다. **Cloud는 운영 방식을 판단하는 별도 축이며 최종 로컬 선정에는 합치지 않습니다.**
+[설계와 기여 범위](docs/project/portfolio-notes.md) · [실제 평가 결과](docs/project/model-selection-report.md) · [로컬·클라우드 비교](docs/project/local-cloud-comparison.md) · [전체 실행 안내](docs/operations/reproduction-guide.md)
+
+## 한눈에 보기
+
+- 대상: 로컬 Qwen3.6·Gemma4, 클라우드 Luna·Motif-3
+- 입력: 공식 테스트 데이터가 공개된 COCI 문제 10개, 모델별 2회 요청
+- 완료 범위: **80회 시도 기록, 정상 응답 78건, 호출 실패 2건**과 최종 평가 보고서
+- 결과: 이 문제·설정·평가 정책에서는 Qwen3.6을 로컬 후보로 선택
+- 기술: Python, llama.cpp, OpenAI SDK, Responses·Chat Completions 호환 API, 파일 기반 실행 기록, 로컬 Judge
+- 성격: 개인 실험·평가 도구
+
+## 직접 한 일과 AI 활용
+
+**실험 수행과 설정 조정은 직접 했고, 도구 구현·유지보수에는 AI 지원을 활용했습니다.** 로컬 서버를 띄우고 GPU 레이어 수, CPU MoE 배치, 스레드, context·출력·reasoning 예산 등 추론·서빙 옵션을 조정하며 동작과 성능을 살폈습니다. 외부 API로 클라우드 모델을 호출하고 공개 코딩 문제로 로컬 결과와 비교했습니다.
+
+[Qwen 서버 셸](configs/llama.cpp/qwen36.sh)과 [Gemma 서버 셸](configs/llama.cpp/gemma4.sh)은 **최종 저장 설정**입니다. 당시 탐색한 모든 조합이 기록된 것은 아니므로 실행별 조건과 대조 측정의 범위를 구분합니다.
+
+CLI 통합, API 어댑터 확장, 기록·잠금·Judge 및 평가 도구의 구현·유지보수에는 AI 지원이 포함됐습니다. 해당 작업과 모의 테스트 이력은 [유지보수 기록](docs/history/maintenance-log.md)에 남아 있습니다. 그 과정에서 실험 수행과 도구 유지보수의 범위를 나누어 기록했습니다.
+
+## 평가 흐름과 설계 판단
 
 ```text
-문제문 + 공식 시간·메모리 제한
-  → 모델 호출 → 원본 응답·생성 지표·추출 코드 저장   (round 1·2 독립 반복)
-  → 전체 생성 완료 → 모델 서버 종료
-  → 순차 일괄 채점 → 채점 세션 저장
+공개 문제문 + 공식 제한
+  → 로컬 서버 / 클라우드 API 호출
+  → 요청 설정·원본 응답·오류·추출 코드 보존
+  → 생성 종료와 모델 서버 종료 확인
+  → 로컬 Judge로 공식 제한 채점
+  → 시간 완화·최소 수정·설명 평가는 별도로 기록
+  → 모델별 집계와 선정 보고서
 ```
 
-생성과 채점을 붙여 두면 채점 프로세스가 모델 서버와 CPU를 다투어 TLE 측정이 흔들립니다. 그래서 모든 생성이 끝나고 서버를 내린 뒤에만 채점합니다.
+1. **그럴듯한 답변과 실행 가능한 코드를 구분했습니다.** 공식 테스트를 확보할 수 있는 문제를 골라 코드의 실제 통과 여부를 확인하고, 설명 평가는 별도 항목으로 두었습니다
+2. **생성과 채점을 분리했습니다.** 모델 서버와 채점 프로세스의 자원 경합이 시간 초과 판정에 영향을 줄 수 있어, 모든 생성과 서버 종료 후 채점하도록 했습니다
+3. **실패와 변경 전 결과를 남겼습니다.** 호출 오류를 분모에서 지우지 않고, 원본과 수정본·완화된 시간 제한 결과를 분리했습니다. 중단·재개 시 기존 기록을 덮어쓰거나 같은 유료 요청을 중복 실행하지 않도록 검사합니다
 
-## 실험 범위
+구현을 읽으려면 [API 어댑터](src/llm_eval/cloud/client.py), [생성·재개](src/llm_eval/cloud/generation.py), [작업 잠금](src/llm_eval/shared/workloads.py), [Judge](src/llm_eval/judging/engine.py), [평가·보고](src/llm_eval/judging/reporting.py)를 보세요. 전체 호출 관계는 [아키텍처](docs/architecture.md)에 있습니다.
 
-모델당 10문항 × 2회 = 20회, 네 모델 합쳐 **80회**가 현재 계획입니다. 로컬 두 모델은 40회, Cloud의 Luna·Motif-3도 각각 20회씩 수행한다. 두 회차는 같은 문제문과 제공자별 설정으로 새로 요청하며 이전 답변이나 채점 결과를 넘기지 않는 독립 반복입니다. 이전 60회 계획은 계획 변경 이력으로 남기며, 그 계획에서 생성된 현재 경로의 원본은 현재 80회에 포함한다.
+## 먼저 체험하기
 
-네 모델이 공유하는 것은 문제 목록·반복 수·독립성뿐입니다. 제공자마다 API 계열과 생성 설정이 달라 토큰 예산이나 temperature까지 같은 조건이라고 적지 않습니다. Luna와 Motif-3도 각각 20회의 분모를 따로 두고 하나의 Cloud 집계로 합치지 않습니다.
+GPU, 모델 가중치, API 키 없이 **합성 응답을 사용하는 오프라인 데모**로 도구의 흐름을 확인할 수 있습니다. 데모 숫자는 실제 모델 성능이 아닙니다.
 
-계획 횟수와 완료 건수는 다릅니다. 생성 완료·채점 완료·품질 평가 완료도 각각 구분합니다. **2026-09-17에 80회 전건 생성, 78건 채점, 80건 설명 리뷰와 평가 보고서까지 마쳤습니다.** 거기까지 오는 동안의 설정 변경과 중단·재개 경위는 [결정 이력](docs/history/decision-log.md)에 시점별로 남겼습니다.
+### 1. 설치
 
-이 프로젝트는 **개인 수행**입니다. 요구사항 정의, 모델 실행, 채점, 설명 평가, 문서화를 모두 혼자 진행했습니다. 그래서 발제의 팀 공통 검수 항목(질문·채점 기준의 팀 합의, 팀원별 실행·채점 참여, 다른 팀원의 재실행 확인)은 해당하지 않습니다. 아래 [재실행 확인](#재실행-확인)도 제3자 교차 검증이 아니라 다른 기기에서 직접 재현한 기록이고, 설명 점수에 교차 검토가 없다는 한계는 [최종 선정 보고서](docs/project/model-selection-report.md#5-2-그-밖의-한계)에 적었습니다.
-
-## 설치
-
-모든 명령은 저장소 루트에서 실행합니다.
+Linux 또는 WSL 환경의 Python 3.12.14와 [uv](https://docs.astral.sh/uv/getting-started/installation/)가 필요합니다. 최초 설치에는 패키지 다운로드를 위한 네트워크가 필요할 수 있습니다.
 
 ```bash
 git clone https://github.com/10o0o/local-llm-evaluation.git
@@ -35,190 +55,72 @@ cd local-llm-evaluation
 uv sync --locked
 ```
 
-Python은 `>=3.12`가 필요하고, 패키지와 고정 의존성은 `pyproject.toml`·`uv.lock`이 정의합니다. 인터프리터 자체는 `.python-version`이 `3.12.14`로 고정합니다. Judge는 후보 코드를 실행 중인 인터프리터로 돌리므로 Python 버전이 곧 채점 조건이고, 특히 TLE 판정이 버전에 따라 갈립니다. 고정이 없으면 기기마다 다른 버전이 잡혀 같은 후보의 판정이 달라질 수 있어 `>=3.12`만으로 두지 않았습니다. 모델 가중치, llama.cpp 런타임, API 키, COCI 테스트 데이터는 저장소에 넣지 않습니다. 각자 준비한 뒤 `data/coci/problems.json`의 `statement_path`·`problem_dir`과 시간·메모리 제한이 실제 파일과 맞는지 먼저 확인합니다.
+### 2. 오프라인 데모 실행
 
 ```bash
-uv run llm-eval validate
+uv run --offline llm-eval demo offline --output /tmp/llm-eval-portfolio-demo
 ```
 
-이 명령은 문제 목록과 문제문·테스트 입출력 짝이 제자리에 있는지만 봅니다. 모델 품질이나 실험 완료와는 무관합니다.
-
-## 실행
-
-### 로컬 생성
-
-서버는 별도 터미널에서 셸로 띄웁니다.
+### 3. 결과 확인
 
 ```bash
-bash configs/llama.cpp/qwen36.sh     # 또는 gemma4.sh
+cat /tmp/llm-eval-portfolio-demo/report.md
 ```
 
-서버가 준비되면 모델당 한 번 워밍업하고 회차별로 생성합니다. 워밍업은 결과 파일을 만들지 않으며 본 실험 집계에서 제외합니다.
+예상 결과는 **AC 1 / WA 1 / NO_CODE 1**입니다. 보고서와 각 예제의 JSON에서 판정·추출 코드·호출 상태를 확인할 수 있습니다. 지정한 출력 폴더가 이미 있으면 덮어쓰지 않으므로 다시 실행할 때는 새 폴더 이름을 사용하세요.
 
-```bash
-uv run llm-eval warmup --model qwen36
+### 실제 모델로 다시 실험하려면
 
-uv run llm-eval generate local --model qwen36 --problems all --round 1
-uv run llm-eval generate local --model qwen36 --problems all --round 2
-```
+- 로컬 생성: GGUF 가중치와 llama.cpp 런타임을 준비하고 [로컬 실행 안내](docs/operations/local-runbook.md)를 따릅니다
+- 클라우드 생성: 본인 API 키와 과금 확인이 필요합니다. [클라우드 실행 안내](docs/operations/cloud-runbook.md)의 모델별 설정을 확인하세요
+- 저장된 응답의 재채점: COCI 공식 테스트 데이터를 별도로 준비해야 합니다
+- 기존 `generate`에서 `--round`를 생략하는 시연은 실제 모델/API를 호출합니다. 위 합성 데모와 다릅니다
 
-벤치마크 생성은 `--round 1/2`를 명시합니다. 자리를 비울 때는 두 모델과 두 회차를 순차로 처리하는 큐를 씁니다.
+벤치마크 생성·재개·채점·평가 명령과 파일 위치는 [전체 실행 안내](docs/operations/reproduction-guide.md)에 모았습니다. API 키, 모델 가중치와 개인 환경 파일은 저장소에 추가하지 않습니다.
 
-```bash
-uv run llm-eval queue
-```
+## 실제 결과
 
-### 발표 시연
+2026-09-17에 완료한 [평가 보고서](results/evaluation/20260917_131133_521417Z_98657c40/reports/20260917_134421_178261Z_7affc20f/report.md)의 집계입니다. 모든 모델의 분모는 20회이며 호출 실패와 코드 미생성도 포함합니다.
 
-로컬·Cloud 모두 `--round`를 생략하면 기존 벤치마크와 분리해 매번 새로 호출·측정합니다.
+| 모델 | 정상 응답 / 시도 | 공식 1배 시간 제한 AC | 프로젝트 정책 AC |
+| --- | ---: | ---: | ---: |
+| Qwen3.6 · 로컬 | 20 / 20 | 12 / 20 | 14 / 20 |
+| Gemma4 · 로컬 | 20 / 20 | 9 / 20 | 9 / 20 |
+| Luna · 클라우드 | 20 / 20 | 15 / 20 | 16 / 20 |
+| Motif-3 · 클라우드 | 18 / 20 | 13 / 20 | 13 / 20 |
 
-```bash
-uv run llm-eval generate local --model qwen36 --problems coci_2025_2026_c5_tezina
-```
+**프로젝트 정책 AC에는 지정한 네 문항의 2배 시간 제한이 반영됩니다.** 공식 제한 AC와 같은 지표가 아니며, 수정한 코드의 통과는 두 열 모두에 합치지 않습니다. 여기서 AC는 보유한 테스트를 통과했다는 뜻으로, 온라인 저지의 공식 제출 판정은 아닙니다.
 
-`results/demo/<문제 이름>/<모델>/`의 생성 파일을 덮어쓰며, 실패한 재시연도 이전 시연을 대체합니다. 시연은 일괄 채점·평가 집계와 Git 저장에서 제외합니다. Cloud도 같은 규칙이며 매번 새 API 요청을 보냅니다. 벤치마크 재개는 `--round 1/2`를 명시합니다.
+이 조건에서 Qwen3.6을 로컬 후보로 선택했습니다. 클라우드는 별도 비교 축이며 로컬 선정에 합산하지 않았습니다. 제공자별 생성 설정·토큰 예산이 달라 이 표를 모델의 일반적인 성능 순위로 해석하지 않습니다.
 
-### Cloud 생성
+대표 실패도 보존했습니다. 함수 호출 괄호 누락, 설명과 다른 미완성 코드, 출력 한도 소진, 제공자 5xx를 나누어 살폈습니다. [선정 근거와 실패 사례](docs/project/model-selection-report.md), [원본·보조 결과의 구분](results/README.md)을 확인할 수 있습니다.
 
-Cloud는 로컬 생성·워밍업·큐·서버와 병행할 수 있습니다. 다만 두 Cloud 모델은 잠금을 공유하므로 서로는 순차로 실행합니다.
+## 해석의 한계
 
-`--model`은 필수입니다. 유료 호출의 대상을 기본값으로 추론하지 않기 위해서입니다. 키는 모델별 환경 변수(`openai_secret_key`, `morph_secret_key`)에서 읽으며 값은 출력·문서·결과에 저장하지 않습니다.
+- **작은 공개 평가셋:** 10문항·한 대의 로컬 장비에 한정됩니다. 공개 문제나 풀이가 모델 학습 데이터에 포함됐을 가능성을 검증하지 않았으므로, 새로운 문제에 대한 일반화 성능으로 단정하지 않습니다
+- **독립 요청과 독립 표본의 차이:** 이전 답변을 넘기지 않고 새로 요청했지만 Qwen의 10문항은 두 회차 응답이 바이트 단위로 같았습니다. 20개의 독립적인 품질 관측으로 취급하지 않습니다
+- **조건과 정책의 차이:** 로컬·클라우드의 생성 설정이 다르고, 일부 시간 제한 완화 기준은 생성 도중 확정했습니다. 사전등록된 통제 실험이 아닙니다
+- **튜닝 이력의 한계:** 서버 옵션을 탐색했지만 모든 조합의 대조 측정을 남기지는 않았습니다. 현재 셸의 값으로 과거 실행 조건이나 튜닝 전후 개선율을 소급하지 않습니다
+- **Judge의 범위:** 시간·출력 제한을 적용하지만 메모리 제한 강제, RSS·MLE 판정과 완전한 보안 샌드박스는 구현하지 않았습니다. 출처를 신뢰할 수 없는 코드를 이 도구만 믿고 실행하면 안 됩니다
+- **관측과 평가의 한계:** 설명 채점은 1인 평가이며, GPU 값은 장치 전체 관측입니다. 비용 추정은 청구서와 대조한 실결제액이 아닙니다
 
-```bash
-uv run llm-eval generate cloud --model luna   --problems all --round 1
-uv run llm-eval generate cloud --model luna   --problems all --round 2
-uv run llm-eval generate cloud --model motif3 --problems all --round 1
-uv run llm-eval generate cloud --model motif3 --problems all --round 2
-```
+## 다음 검증 과제
 
-키를 `.env` 파일로 관리한다면 `uv run --env-file <경로> llm-eval ...` 형태로 넘깁니다. `.env`는 저장소에 포함하지 않습니다.
+아래는 이번에 완료한 성과가 아니라 후속 과제입니다.
 
-### 채점
+- 서버 빌드·모델 파일 해시와 설정 조합을 실행별로 고정해 파라미터 조정의 효과를 대조 측정
+- 평가셋 확대와 공개 문제의 학습 데이터 오염 가능성 점검
+- 평가 정책을 실험 전에 확정하고, 반복 응답 중복·설명 평가자 간 차이를 함께 확인
+- 생성 코드 실행의 격리와 메모리 제한을 보완
 
-로컬·Cloud 생성을 모두 마치고 모델 서버를 내린 뒤 실행합니다.
+## 문서와 재현 근거
 
-```bash
-uv run llm-eval judge batch --problems all --models all --rounds all
-```
+- [설계·직접 수행·AI 지원·설정 탐색](docs/project/portfolio-notes.md)
+- [전체 설치·실행·결과 확인](docs/operations/reproduction-guide.md)
+- [아키텍처와 파일별 책임](docs/architecture.md)
+- [최종 선정 보고서](docs/project/model-selection-report.md) · [로컬·클라우드 비교](docs/project/local-cloud-comparison.md)
+- [실행 환경과 측정 범위](docs/operations/environment.md) · [평가 절차](docs/operations/evaluation.md)
+- [요구사항](docs/project/requirements.md) · [평가 질문](docs/project/evaluation-questions.md) · [발제 원문](docs/project/assignment.md)
+- [결정 이력](docs/history/decision-log.md) · [구현·검증 이력](docs/history/maintenance-log.md)
 
-원본 후보를 고친 복사본을 따로 확인할 때는 `candidate` 모드를 씁니다. 이 결과는 모델의 원본 판정과 섞지 않고 보조 평가로만 씁니다.
-
-```bash
-uv run llm-eval judge candidate --code path/to/candidate.py --problem <problem-id>
-```
-
-### 평가와 보고
-
-`judge batch`는 생성 원본을 공식 1배 시간 제한으로 채점하는 기준 세션이다. 네 모델·10문항·두 회차가 모두 끝나고 로컬 서버를 종료한 뒤 기준 세션을 만든다. 열 문항은 모두 공식 1배 제한의 원본 평가와 최소 수정 보조 대상이다. 네 개의 scoring 문항은 개별 테스트 TLE가 있을 때 2배 제한으로 전체 재평가해 scoring에 반영하고, 나머지 여섯 문항의 2배 재평가는 diagnostic으로 남긴다. 문제문에 넣은 공식 시간·메모리 제한과 생성 프롬프트는 바꾸지 않는다.
-
-```bash
-uv run llm-eval evaluate prepare --baseline <세션 ID>
-uv run llm-eval evaluate run --evaluation <평가 ID> --kind limits
-uv run llm-eval evaluate run --evaluation <평가 ID> --kind repairs
-uv run llm-eval evaluate report --evaluation <평가 ID>
-```
-
-평가 기준과 파일 형식은 [평가 실행 안내](docs/operations/evaluation.md)에 둔다. 평가 기준은 생성이 시작된 뒤 확정된 것이므로 사전등록된 기준으로 표시하지 않는다. `CALL_ERROR`는 설명 점수에서 제외하고, `NO_CODE`를 포함한 정상 응답은 직접 설명 점수를 매긴다. 보조 수정본은 원본 정답률에 합치지 않는다.
-
-### 진단
-
-단일 응답 확인과 생성 한도 진단은 본 실험 집계와 분리합니다.
-
-```bash
-uv run llm-eval diagnose response
-uv run llm-eval diagnose generation-limit --model qwen36
-```
-
-## 결과 위치
-
-```text
-results/benchmark/<문제>/<모델>/round_<회차>/
-├── response.json       # 원본 provider 응답
-├── candidate.py        # 추출 코드가 있을 때만
-└── result.json         # 요청·생성 설정·호출 상태·지표·추출 코드
-
-results/judging/<세션 ID>/
-├── manifest.json
-└── <문제>/<모델>/round_<회차>/judge.json
-
-results/evaluation/<평가 ID>/
-├── manifest.json, policy.json
-├── reviews/<문제>/<모델>/round_<회차>/review.json
-├── attempts/<문제>/<모델>/round_<회차>/<attempt-id>/
-│   ├── attempt.json, attempt.seal, candidate.py, candidate.diff
-└── reports/<unique>/report.json, report.md, review-snapshot.json
-```
-
-모델 폴더는 `qwen36`·`gemma4`·`luna`·`motif3`입니다. `result.json`에는 응답만이 아니라 요청 messages와 생성 설정, 호출 성공·실패 상태까지 함께 남깁니다. 나중에 "이 결과가 어떤 조건에서 나왔는지"를 파일만 보고 알 수 있게 하기 위해서입니다.
-
-측정하지 못한 값은 0으로 채우지 않고 사유와 함께 `null`로 남깁니다. 예를 들어 상주 llama.cpp 서버는 요청별 모델 로딩 시간을 노출하지 않으므로 `model_load_seconds`는 `null`이고 `model_load_reason`에 그 이유가 들어갑니다.
-
-`pilot/`, `calibration/`, `diagnostics/`, `archive/`는 각각 다른 의미를 가진 파일군입니다. 설정을 바꿀 때마다 이전 결과를 본 실험에서 내려 보존한 것들이라, 폴더가 있다는 것만으로 실험·채점 완료를 판단하면 안 됩니다. 이름별 의미와 집계 경계는 [결과 안내](results/README.md)에 정리했습니다.
-
-## 저장소 구조
-
-```text
-.
-├── configs/llama.cpp/       # qwen36.sh, gemma4.sh — 서버 실행 설정
-├── data/coci/               # problems.json metadata와 준비한 문제 자료
-├── docs/                    # architecture, project, operations, history, sources
-├── results/                 # 실행하면 생기는 결과군
-├── src/llm_eval/            # 단일 CLI와 local/cloud/judging/shared 패키지
-├── tests/                   # 책임별 mock·fixture와 합성 경계 테스트
-├── AGENTS.md                # 저장소 작업 규칙과 보존 규칙
-├── pyproject.toml           # package와 llm-eval console script
-├── uv.lock                  # 고정 의존성
-└── .python-version          # 채점 조건을 고정하는 인터프리터 버전
-```
-
-운영 명령은 `uv run llm-eval`과 같은 구현인 `python -m llm_eval` 둘뿐입니다. 예전에는 `scripts/` 아래에 진입점이 열 개 넘게 흩어져 있었는데, 문서에 적은 명령과 실제 쓰는 명령이 어긋나기 시작해 전부 패키지 안으로 합쳤습니다. 파일별 책임과 호출 관계, 관련 테스트는 [architecture](docs/architecture.md)에 매핑해 두었습니다.
-
-## 실험 설정과 해석 경계
-
-서버와 요청 설정을 구분해 기록합니다. 두 로컬 모델의 서버 Context는 65,536, 기본 출력 61,440, reasoning budget 53,248, temperature 0입니다. 배치는 다릅니다. Qwen은 `--gpu-layers all --n-cpu-moe 32`에 threads 16 / batch 24로 직접 고정했고, Gemma는 `--gpu-layers auto --fit on --fit-target 0`으로 auto fit에 맡겼습니다. 두 셸 모두 `--cache-ram 0`입니다.
-
-이 파일 값만으로 과거 실행의 실제 적용 조건이나 VRAM 적합성을 소급하지는 않습니다. 특정 실행에 무엇이 적용됐는지는 그 실행의 `result.json`과 서버 로그로 따로 확인합니다. 관측 범위와 미확인 항목은 [실행 환경](docs/operations/environment.md)에 정리했습니다.
-
-지표도 서로 다른 것을 섞지 않습니다. 요청 전체 경과 시간, llama.cpp 내부 생성 속도, GPU 사용량 관측, Cloud 토큰·비용 추정은 각각 다른 값입니다. 특히 GPU 사용량은 장치 전체 관측값이고 프로세스별 값은 조회되지 않아 사유와 함께 `null`로 남아 있으므로, 모델 단독 사용량으로 읽으면 안 됩니다.
-
-Judge는 테스트별 시간 제한과 stdout·stderr 합산 10 MiB 출력 제한을 적용합니다. **메모리 제한 강제·RSS 측정·MLE 판정은 구현하지 않았습니다.** 따라서 AC는 보유한 테스트를 통과했다는 뜻이지 메모리 제한 준수를 증명하지 않습니다. 기록의 의미와 한계는 [기록 구현 점검](docs/operations/recording.md)을 참고합니다.
-
-## 재실행 확인
-
-2026-09-17에 **다른 기기에서 저장소를 새로 받아 전체 흐름을 재현**했다. 원래 작업하던 PC가 아니라 테스트 데이터도 가상환경도 없는 상태에서 시작했다.
-
-| 단계 | 결과 |
-| --- | --- |
-| `git clone` 후 `uv sync --locked` | Python 3.12.14 환경 복원 (`openai 3.8.0`, `httpx2 2.12.0`, `pydantic 2.13.5`) |
-| COCI 테스트 데이터 준비 | hsin.hr에서 contest 4·5·6 `testdata` 재다운로드 후 `problem_dir`에 배치 |
-| `uv run llm-eval validate` | 10문항 전부 `[OK]`, `Validation PASSED` |
-| `judge batch` | 80건 중 78건 판정, `coverage_complete=true` |
-| `evaluate prepare/run/report` | `complete=true`, `local_comparison_ready=true` |
-| 모의·합성 테스트 | `LLM_EVAL_RUN_PROCESS_TESTS=1 ... unittest discover` 181개 통과 |
-
-**테스트 수가 과거 채점 기록과 일치**해(Škare 41, Čokolada 75, Džeparac 104) 같은 데이터임을 확인했다. 이 과정에서 Judge가 후보 코드를 실행 중인 인터프리터로 돌린다는 점 때문에 `.python-version`을 `3.12.14`로 고정했다. 고정 전에는 이 기기의 Python 3.12가 없어 3.14가 잡혔고, 그대로 뒀다면 기록된 채점 조건과 달라졌을 것이다.
-
-재현에 필요한 외부 준비물은 모델 가중치·llama.cpp 런타임·API 키·COCI 테스트 데이터 네 가지이며 저장소에 넣지 않는다. 생성까지 재현하려면 앞의 두 개가 추가로 필요하고, 저장된 원본으로 채점·평가만 재현하는 데는 테스트 데이터만 있으면 된다.
-
-## 문서 지도
-
-| 문서 | 역할 |
-| --- | --- |
-| [architecture](docs/architecture.md) | 파일별 책임·호출자·테스트 매핑 |
-| [로컬 실행 안내](docs/operations/local-runbook.md) | 서버·워밍업·두 회차·큐·채점 절차 |
-| [Cloud 비교 안내](docs/operations/cloud-runbook.md) | Luna·Motif-3 실행 조건, 모델별 키 로드, 비용 경계 |
-| [실행 환경](docs/operations/environment.md) | 장비·버전·서버 설정의 관측 범위와 미확인 항목 |
-| [기록 구현 점검](docs/operations/recording.md) | 지표·저장·누락값·Judge 한계 |
-| [평가 실행 안내](docs/operations/evaluation.md) | 기준 세션·제한 재평가·보조 수정·설명·집계 |
-| [요구사항과 평가 기준](docs/project/requirements.md) | 사용 사례, 60% 통과선, 선정 순서, 설명 정확성 기준 |
-| [평가 질문 10개](docs/project/evaluation-questions.md) | 문항별 기대 결과, 정상·경계 사례 구분, 동일 조건과 차이 |
-| [최종 선정 보고서](docs/project/model-selection-report.md) | 선정 결과와 근거, 대표 실패 사례, 한계 |
-| [Local–Cloud 비교](docs/project/local-cloud-comparison.md) | 품질·속도·비용·보안·운영 실측과 운영 권고 |
-| [생성 기록 진단](docs/history/generation-diagnostics.md) | reasoning 반복, 회차 중복, 후보 코드 결함 유형 |
-| [모델 후보 조사](docs/project/model-candidates.md) | 후보 비교표, Model Card·License, 제외한 후보 이력 |
-| [발제 원문](docs/project/assignment.md) · [평가표](docs/project/assignment-rubric.md) | 과제 기준과 사용자 정의 조건의 구분 |
-| [단계별 학습 안내](docs/project/learning-guide.md) | STEP 1~8 진행 순서와 완료 근거 |
-| [결과 안내](results/README.md) | 결과군 이름·집계 제외·채점 세션 의미 |
-| [정리 이력](docs/history/README.md) | 이전 경로와 Git 복원 정보 |
-| [결정 이력](docs/history/decision-log.md) | 2026-09-14~09-17 시점별 결정·관측; 종료로 닫힘 |
-| [유지보수 이력](docs/history/maintenance-log.md) | 통합·검증 기록과 종료 시점 상태; 종료로 닫힘 |
+과거 기록의 수치와 실행 조건은 당시 기준으로 보존합니다. 이번 포트폴리오 정리는 새로운 모델 실험이나 성능 개선 결과를 추가한 것이 아닙니다.
