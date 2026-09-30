@@ -188,9 +188,9 @@ src/llm_eval/
 | `docs/operations/environment.md` | 장비·버전·서버 설정의 관측 시점과 근거 |
 | `docs/operations/recording.md` | 지표 의미·누락값·응답 저장·채점의 한계 |
 | `docs/operations/evaluation.md` | 기준 세션·제한 재평가·보조 수정·설명 리뷰·보고서 절차 |
-| `docs/project/assignment.md` | 보존한 발제 원문과 필수 산출물 |
-| `docs/project/assignment-rubric.md` | 보존한 수행 평가 기준 |
-| `docs/project/learning-guide.md` | STEP 1~8 학습 단계와 완료 근거 |
+| `docs/project/assignment.md` | 교육 과정의 과제 맥락과 이번 수행 범위 요약 |
+| `docs/project/assignment-rubric.md` | 프로젝트 평가 근거를 찾는 문서 안내 |
+| `docs/project/learning-guide.md` | 실제 수행 흐름·조건 차이·현재 실행 안내 |
 | `docs/project/model-candidates.md` | 모델 후보 조사와 제외 근거 |
 | `docs/project/requirements.md` | 사용자 정의 입력·반복·채점·선정 기준 |
 | `docs/project/evaluation-questions.md` | 질문 10개의 기대 결과·사례 구분·동일 조건과 차이 (발제 산출물) |
@@ -201,11 +201,7 @@ src/llm_eval/
 | `docs/history/README.md` | 과거 경로와 Git 복원 안내 |
 | `docs/history/hyperclovax-runbook.md` | 과거 HyperCLOVA 실행·진단 절차 |
 | `docs/history/reasoning-budget-diagnostic.md` | 과거 reasoning 설정과 진단 근거 |
-| `docs/sources/project-brief.2026-09-14.md` | 발제·평가 원문 스냅샷 보존; 현재 운영 명령 안내와 구분 |
-| `docs/sources/project-brief.html` | 발제·평가 원문 스냅샷 보존; 현재 운영 명령 안내와 구분 |
-| `docs/sources/project-brief.notion.md` | 발제·평가 원문 스냅샷 보존; 현재 운영 명령 안내와 구분 |
-| `docs/sources/project-brief.previous.md` | 발제·평가 원문 스냅샷 보존; 현재 운영 명령 안내와 구분 |
-| `docs/sources/project-evaluation.notion.md` | 발제·평가 원문 스냅샷 보존; 현재 운영 명령 안내와 구분 |
+| `docs/sources/README.md` | 자료 출처와 교육 자료의 공개 범위 |
 | `results/README.md` | 결과 파일군·집계 제외·채점 세션 해석 |
 
 테스트는 소스의 역할에 맞춰 나눈다. 모의 응답·임시 파일을 사용하며 합성 프로세스 검증은 별도 환경 변수로 활성화한다. 실제 모델·API를 호출하지 않는다.

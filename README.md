@@ -1,6 +1,6 @@
 # 로컬·클라우드 LLM 코딩 평가
 
-코딩 문제 풀이에 쓸 로컬 LLM을 고르려고 시작한 프로젝트입니다. llama.cpp로 Qwen3.6과 Gemma4를 구동하고, GPU 레이어·스레드·context 등의 설정을 바꿔 보면서 클라우드 모델 Luna·Motif-3와 비교했습니다.
+교육 과정에서 수행한 로컬 LLM 비교·평가 프로젝트입니다. 코딩 문제 풀이에 쓸 모델을 고르는 것을 목표로 삼았습니다. llama.cpp로 Qwen3.6과 Gemma4를 구동하고, GPU 레이어·스레드·context 등의 설정을 바꿔 보면서 클라우드 모델 Luna·Motif-3와 비교했습니다.
 
 COCI 공개 문제 10개를 모델마다 두 번씩 풀게 했습니다. 답변에서 Python 코드를 추출해 공식 테스트 데이터로 실행하고, 정답 여부와 설명 품질을 따로 평가했습니다. 요청 설정, 원본 응답, 오류, 채점 결과는 저장소에서 확인할 수 있습니다.
 
@@ -118,4 +118,5 @@ uv run --offline llm-eval judge batch --problems all --models all --rounds all
 - [실행 환경](docs/operations/environment.md): 장비, 서버 설정, 측정 항목
 - [평가 절차](docs/operations/evaluation.md) · [결과 파일 안내](results/README.md)
 - [평가 질문](docs/project/evaluation-questions.md) · [요구사항](docs/project/requirements.md)
+- [과제 맥락과 수행 범위](docs/project/assignment.md) · [자료 출처](docs/sources/README.md)
 - [결정 이력](docs/history/decision-log.md) · [유지보수 이력](docs/history/maintenance-log.md)

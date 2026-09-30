@@ -17,7 +17,7 @@
 - 실험은 2026-09-17에 종료됐다. 현재 결과와 결론은 [README](README.md)와 발제 산출물 3종([평가 질문](docs/project/evaluation-questions.md), [Local–Cloud 비교](docs/project/local-cloud-comparison.md), [최종 선정 보고서](docs/project/model-selection-report.md))을 먼저 읽는다. 과거 시점의 결정 경위가 필요할 때만 [결정 이력](docs/history/decision-log.md)을 참고하며, 이 문서의 "다음 한 작업"은 모두 당시 서술이다.
 - 코드·설정 유지보수는 대상 소스, 인접 테스트, 해당 실행 안내를 먼저 읽는다. 구조 개선·병합·분리본 작업은 [유지보수 이력](docs/history/maintenance-log.md)도 확인한다. README는 그 작업이 사용법이나 확인된 상태를 바꿀 때만 갱신 대상으로 검토한다. 닫힌 [결정 이력](docs/history/decision-log.md)·[유지보수 이력](docs/history/maintenance-log.md)에는 새 진행 상태를 덧쓰지 않는다.
 - 구조 개선·이름 변경은 [architecture](docs/architecture.md)의 현재 트리, 이전 명령 매핑, 생성 파일군 경계를 먼저 확인한다. `src/llm_eval/`의 책임을 결과·로그·데이터 파일의 내용과 섞지 않는다.
-- 과제 범위와 완료 기준은 [발제 원문](docs/project/assignment.md), [단계별 안내](docs/project/learning-guide.md), [사용자 정의 기준](docs/project/requirements.md)의 해당 절을 작업별로 읽는다. 발제 필수, 발제 선택·사용자 필수, 사용자 정의 기준, 추가 학습·방법 제안을 서로 바꾸지 않는다.
+- 과제 범위와 완료 기준은 [과제 맥락과 수행 범위](docs/project/assignment.md), [단계별 안내](docs/project/learning-guide.md), [사용자 정의 기준](docs/project/requirements.md)의 해당 절을 작업별로 읽는다. 과정의 기본 범위, 선택 실습, 사용자 정의 기준을 서로 바꾸지 않는다. 공개 요약을 공식 원문으로 취급하지 않으며, 교육 자료 원문은 [공개 범위](docs/sources/README.md)에 따라 재게시하지 않는다.
 - 사용자가 명시적으로 Notion 활동 기록을 요청할 때만 [저장소 일지 스킬](.agents/skills/kant-notion-journal/SKILL.md)을 사용한다. 일반 질문·리뷰와 AI 중간 인계·메모리 기록·README/문서 갱신·실습/과제 수행에는 사용하지 않는다. Notion에는 실제 활동·결정·검증 결과만 남기고 AI의 중간 계획·체크포인트·임시 경로·재개 지시는 저장하지 않는다. 실행 근거와 당시 재개 작업은 [결정 이력](docs/history/decision-log.md)·[유지보수 이력](docs/history/maintenance-log.md)에 시점 기록으로 남아 있다. 스킬을 사용할 수 없을 때는 [원격 작성 안내](https://app.notion.com/p/3dbde5bf907481059282f5ee3c95fe22)를 따른다.
 
 ## 학습 진행
@@ -34,7 +34,7 @@
 - 빈 실습 파일·양식·평가 답안·최종 보고서를 선제적으로 만들지 않는다. 양식을 요청받으면 해당 단계의 핵심 항목만 구성한다.
 - 발제의 완료 기준, 본문의 확인 사항, 조건 예시를 구분한다. 예시를 필수 체크리스트로 바꾸거나 AI의 추가 제안을 완료 조건으로 만들지 않는다.
 - 유효 정답률 등 사용자 지표는 발제 공통 기준이나 호출 성공/시도 수·지표별 n·품질 근거를 대체하지 않는다. 모델 조사표의 파일 크기는 모델 카드·배포 문서에 명시된 값을 사용한다.
-- 원문에 없는 CLI, 패키지 구조, JSON 스키마, 점수 척도, 테스트 프레임워크를 학습 선행 조건으로 강제하지 않는다. 제공 예제는 [단계별 안내](docs/project/learning-guide.md)에 표시한 저장소 외부 위치에서 읽기 전용으로 참고한다.
+- 원문에 없는 CLI, 패키지 구조, JSON 스키마, 점수 척도, 테스트 프레임워크를 학습 선행 조건으로 강제하지 않는다. 과정에서 제공된 예제는 접근 권한이 있는 원래 위치에서 읽기 전용으로 참고하며, 공개 저장소에 복사하지 않는다.
 - 출력 한도·reasoning·Context 등 생성 설정 변경은 Python 요청과 `configs/llama.cpp/`의 두 서버 실행 셸을 함께 검토한다. 서버 기본값과 요청값을 구분하고 재시작 필요 여부를 알리며, 실행 전 VRAM 적합성을 확정하지 않는다.
 - 모델 입력과 데이터 파싱의 상세 기준은 [요구사항](docs/project/requirements.md#실행-제한과-결과-경로)을 따른다. 문제문에는 설명·입출력 조건·전체 제약·예제와 예제 설명만 남기고, 제목·대회 정보·배점·출처·부분 점수표는 제외한다. 시간·메모리 제한은 `data/coci/problems.json`에서 읽어 문제 바로 위의 별도 블록에 둔다. 문제문 원본과 공개 예제를 보존하며 테스트 데이터·정답·풀이를 입력에 넣지 않는다. `problem_dir`와 `statement_path`는 저장소 루트 기준이고, 승인된 메타데이터 필드를 임의로 복원하지 않으며, 난이도와 채점 정책을 AI가 추정하지 않는다. 파싱 후 본문·수식·제약·예제, JSON과 경로를 검증한다. 메모리 제한 강제·RSS 측정·MLE 판정은 구현하지 않는다.
 

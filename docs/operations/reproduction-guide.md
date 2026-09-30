@@ -193,8 +193,8 @@ Judge는 테스트별 시간 제한과 stdout·stderr 합산 10 MiB 출력 제�
 | [Local–Cloud 비교](../project/local-cloud-comparison.md) | 품질·속도·비용·보안·운영 실측과 운영 권고 |
 | [생성 기록 진단](../history/generation-diagnostics.md) | reasoning 반복, 회차 중복, 후보 코드 결함 유형 |
 | [모델 후보 조사](../project/model-candidates.md) | 후보 비교표, Model Card·License, 제외한 후보 이력 |
-| [발제 원문](../project/assignment.md) · [평가표](../project/assignment-rubric.md) | 과제 기준과 사용자 정의 조건의 구분 |
-| [단계별 학습 안내](../project/learning-guide.md) | STEP 1~8 진행 순서와 완료 근거 |
+| [과제 범위 요약](../project/assignment.md) · [평가 근거 안내](../project/assignment-rubric.md) | 과제 기준과 사용자 정의 조건의 구분 |
+| [단계별 학습 안내](../project/learning-guide.md) | 실제 수행 흐름과 결과를 읽을 때의 기준 |
 | [결과 안내](../../results/README.md) | 결과군 이름·집계 제외·채점 세션 의미 |
 | [정리 이력](../history/README.md) | 이전 경로와 Git 복원 정보 |
 | [결정 이력](../history/decision-log.md) | 2026-09-14~09-17 시점별 결정·관측; 종료로 닫힘 |
